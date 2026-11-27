@@ -8,6 +8,39 @@ function jsonError(message: string, status: number) {
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
+async function getModelsFolderId(accessToken: string) {
+  if (process.env.GOOGLE_DRIVE_FOLDER_ID) return process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+  const query = "mimeType='application/vnd.google-apps.folder' and appProperties has { key='polyNookFolder' and value='models' } and trashed=false";
+  const listParams = new URLSearchParams({ q: query, pageSize: "1", fields: "files(id)" });
+  const listResponse = await fetch(`https://www.googleapis.com/drive/v3/files?${listParams}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  const listPayload = await listResponse.json();
+  if (!listResponse.ok) throw new Error(listPayload.error?.message ?? "Could not find the Poly Nook Drive folder.");
+  if (typeof listPayload.files?.[0]?.id === "string") return listPayload.files[0].id as string;
+
+  const createResponse = await fetch("https://www.googleapis.com/drive/v3/files?fields=id", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: "Poly Nook Models",
+      mimeType: "application/vnd.google-apps.folder",
+      appProperties: { polyNookFolder: "models" },
+    }),
+    cache: "no-store",
+  });
+  const createPayload = await createResponse.json();
+  if (!createResponse.ok || typeof createPayload.id !== "string") {
+    throw new Error(createPayload.error?.message ?? "Could not create the Poly Nook Drive folder.");
+  }
+  return createPayload.id as string;
+}
+
 export async function POST(request: Request) {
   let input: Record<string, unknown>;
   try {
@@ -35,11 +68,12 @@ export async function POST(request: Request) {
 
   try {
     const accessToken = await getGoogleDriveAccessToken();
+    const folderId = await getModelsFolderId(accessToken);
     const metadata = {
       name: filename.replace(/[\\/]/g, "_"),
       mimeType,
       description: `Poly Nook model: ${title} by ${creator}. ${description}`.slice(0, 1000),
-      ...(process.env.GOOGLE_DRIVE_FOLDER_ID ? { parents: [process.env.GOOGLE_DRIVE_FOLDER_ID] } : {}),
+      parents: [folderId],
       appProperties: {
         polyNook: "model",
         submissionId,

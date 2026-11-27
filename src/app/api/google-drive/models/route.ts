@@ -1,6 +1,16 @@
 import { getGoogleDriveAccessToken } from "@/lib/google-drive";
 
-export const runtime = "nodejs";
+type GalleryModel = {
+  id: string;
+  title: string;
+  creator: string;
+  category: string;
+  description: string;
+  createdAt: string;
+  previewId?: string;
+  downloadId?: string;
+  fileSize?: string;
+};
 
 export async function GET() {
   try {
@@ -18,12 +28,12 @@ export async function GET() {
     const payload = await response.json();
     if (!response.ok) return Response.json({ error: "Could not read Poly Nook models from Drive." }, { status: 502 });
 
-    const models = new Map<string, { id: string; title: string; creator: string; category: string; description: string; createdAt: string; previewId?: string; downloadId?: string; fileSize?: string }>();
+    const models = new Map<string, GalleryModel>();
     for (const file of payload.files ?? []) {
       const properties = file.appProperties ?? {};
       const submissionId = properties.submissionId;
       if (typeof submissionId !== "string") continue;
-      const model = models.get(submissionId) ?? {
+      const model: GalleryModel = models.get(submissionId) ?? {
         id: submissionId,
         title: properties.title ?? "Untitled model",
         creator: properties.creator ?? "Poly Nook artist",

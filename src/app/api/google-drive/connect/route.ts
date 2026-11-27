@@ -1,8 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { getGoogleOAuthRedirectUri } from "@/lib/google-drive";
 
-export const runtime = "nodejs";
-
 export async function GET() {
   if (process.env.NODE_ENV !== "development") {
     return Response.json({ error: "Start the Google Drive connection from a local development session." }, { status: 404 });
@@ -23,12 +21,11 @@ export async function GET() {
     state,
   }).toString();
 
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return new Response(null, {
     status: 302,
     headers: {
       Location: authorize.toString(),
-      "Set-Cookie": `poly_nook_oauth_state=${state}; HttpOnly; SameSite=Lax; Path=/api/google-drive/callback; Max-Age=600${secure}`,
+      "Set-Cookie": `poly_nook_oauth_state=${state}; HttpOnly; SameSite=Lax; Path=/api/google-drive/callback; Max-Age=600`,
       "Cache-Control": "no-store",
     },
   });

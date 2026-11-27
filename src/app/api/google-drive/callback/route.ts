@@ -1,7 +1,5 @@
 import { getGoogleOAuthRedirectUri } from "@/lib/google-drive";
 
-export const runtime = "nodejs";
-
 function page(message: string, status = 200) {
   return new Response(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Poly Nook Drive setup</title><body style="font:16px system-ui;max-width:720px;margin:48px auto;padding:0 20px;line-height:1.6"><h1>Poly Nook Drive setup</h1>${message}</body></html>`, {
     status,

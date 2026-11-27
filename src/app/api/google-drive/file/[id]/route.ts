@@ -1,7 +1,5 @@
 import { getGoogleDriveAccessToken } from "@/lib/google-drive";
 
-export const runtime = "nodejs";
-
 export async function GET(request: Request, context: RouteContext<"/api/google-drive/file/[id]">) {
   const { id } = await context.params;
   if (!/^[a-zA-Z0-9_-]{10,200}$/.test(id)) return new Response("Not found", { status: 404 });

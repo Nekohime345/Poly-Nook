@@ -1,8 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getGoogleDriveAccessToken, hasValidSubmissionCode } from "@/lib/google-drive";
 
-export const runtime = "nodejs";
-
 const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = new Set([".blend", ".glb"]);
 

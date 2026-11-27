@@ -1,7 +1,5 @@
 import { getGoogleDriveAccessToken, hasValidSubmissionCode } from "@/lib/google-drive";
 
-export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   let input: Record<string, unknown>;
   try {

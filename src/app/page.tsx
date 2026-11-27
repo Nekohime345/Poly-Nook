@@ -140,7 +140,7 @@ export default function Home() {
         <a className="share-button" href="/submit">Submit a model <span>↗</span></a>
       </section>
 
-      <footer id="about"><a className="brand footer-brand" href="#top"><span className="brand-mark">p</span>poly nook<span className="brand-period">.</span></a><span>A small place for things made in 3D.</span><span>MADE FOR THE LOVE OF MAKING <b>✳</b></span><a href="#top" className="back-top">BACK TO TOP ↑</a></footer>
+      <footer id="about"><a className="brand footer-brand" href="#top"><span className="brand-mark">p</span>poly nook<span className="brand-period">.</span></a><span>A small place for things made in 3D.</span><a href="/privacy">Privacy</a><span>MADE FOR THE LOVE OF MAKING <b>✳</b></span><a href="#top" className="back-top">BACK TO TOP ↑</a></footer>
       {selectedModel && <div className="model-dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedModel(null); }}>
         <section className="model-dialog" role="dialog" aria-modal="true" aria-labelledby="model-dialog-title">
           <button className="model-dialog-close" aria-label="Close model details" onClick={() => setSelectedModel(null)}>×</button>

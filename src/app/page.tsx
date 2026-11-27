@@ -102,7 +102,22 @@ export default function Home() {
         </div>
         <div className="model-grid">
           {filteredModels.map((model, index) => (
-            <article className={`model-card ${model.featured ? "featured-card" : ""}`} key={model.id ?? model.title}>
+            <article
+              className={`model-card ${model.featured ? "featured-card" : ""}`}
+              key={model.id ?? model.title}
+              tabIndex={0}
+              aria-label={`Open details for ${model.title}`}
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest("button, a, model-viewer")) return;
+                setSelectedModel(model);
+              }}
+              onKeyDown={(event) => {
+                if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  setSelectedModel(model);
+                }
+              }}
+            >
               <div className={`model-art art-${model.style}`}>
                 <div className="art-grain" />
                 {model.previewUrl ? <ModelViewer className="model-viewer" src={model.previewUrl} alt={`Interactive 3D preview of ${model.title}`} camera-controls auto-rotate loading="lazy" shadow-intensity="0.8" /> : <div className="model-shape" aria-hidden="true">{model.shape}</div>}

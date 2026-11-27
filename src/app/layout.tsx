@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Formfolk - a little world of 3D things",
+  title: "Poly Nook - a little world of 3D things",
   description: "Find, preview, and download thoughtful 3D models made by artists.",
 };
 

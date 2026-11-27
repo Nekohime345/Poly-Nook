@@ -36,7 +36,7 @@ export default function Home() {
   return (
     <main>
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Formfolk home"><span className="brand-mark">f</span>formfolk<span className="brand-period">.</span></a>
+        <a className="brand" href="#top" aria-label="Poly Nook home"><span className="brand-mark">p</span>poly nook<span className="brand-period">.</span></a>
         <nav className="top-links" aria-label="Main navigation"><a href="#gallery">Explore</a><a href="#about">About</a></nav>
         <a className="submit-button" href="#share">Share a model <span aria-hidden="true">↗</span></a>
       </header>
@@ -91,10 +91,10 @@ export default function Home() {
       <section className="share-section" id="share">
         <div className="share-spark" aria-hidden="true">✳</div>
         <div><div className="eyebrow">MADE SOMETHING?</div><h2>Put it out<br />into the <em>world.</em></h2><p>This gallery will grow with artists like you. We’re getting the studio ready for submissions.</p></div>
-        <a className="share-button" href="mailto:hello@formfolk.studio?subject=Share%20a%20model">Get in touch <span>↗</span></a>
+        <a className="share-button" href="#gallery">Explore the gallery <span>↗</span></a>
       </section>
 
-      <footer id="about"><a className="brand footer-brand" href="#top"><span className="brand-mark">f</span>formfolk<span className="brand-period">.</span></a><span>A small place for things made in 3D.</span><span>MADE FOR THE LOVE OF MAKING <b>✳</b></span><a href="#top" className="back-top">BACK TO TOP ↑</a></footer>
+      <footer id="about"><a className="brand footer-brand" href="#top"><span className="brand-mark">p</span>poly nook<span className="brand-period">.</span></a><span>A small place for things made in 3D.</span><span>MADE FOR THE LOVE OF MAKING <b>✳</b></span><a href="#top" className="back-top">BACK TO TOP ↑</a></footer>
     </main>
   );
 }

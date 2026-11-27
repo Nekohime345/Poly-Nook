@@ -1,4 +1,4 @@
-# Formfolk
+# Poly Nook
 
 A Next.js gallery starter for sharing Blender models. The current page includes sample gallery content, category filters, search, and responsive layouts.
 

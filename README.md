@@ -1,24 +1,64 @@
 # Poly Nook
 
-A Next.js gallery for Blender models. Friends submit `.blend` downloads and optional `.glb` previews from `/submit`. Files and model metadata are stored in the connected Google Drive account.
+**A cozy gallery for sharing Blender creations.** Browse models, inspect their details, preview GLB files in 3D, and download the original Blender projects.
 
-## Google Drive setup
+## Live demo
 
-1. Create `.env.local` from `.env.example` and fill in the Web OAuth client ID and the rotated client secret. Keep this file private.
-2. Set `GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/google-drive/callback` locally.
-3. Start the app with `npm run dev`, then visit `http://localhost:3000/api/google-drive/connect` and authorize the Google account that will own the models.
-4. Copy the refresh token shown on the local callback page to `GOOGLE_REFRESH_TOKEN` in Vercel. Never add the refresh token to source control or share it in chat.
-5. Set a private `POLY_NOOK_SUBMISSION_CODE` in Vercel and share it only with friends who can submit models.
-6. Redeploy the Vercel app after adding environment variables.
+**[Visit Poly Nook](https://poly-nook.vercel.app/)**
 
-The app requests only the `drive.file` scope and uses resumable uploads. `.blend` and `.glb` files can each be up to 1 GB. Uploaded files stay private in Drive; the site streams them for previews and downloads. Submissions publish automatically.
+The gallery is public. Model submissions are available to people with the private submission code.
 
-Google OAuth apps left in External Testing may issue refresh tokens that expire after seven days. Move the OAuth app out of Testing before relying on it long term. The gallery itself is public to anyone with its URL; the invite code only protects submissions.
+## What it does
 
-## Development
+- Browse and search a curated gallery by category.
+- Open a model details panel with its creator, description, category, and file information.
+- Interactively preview models when a GLB preview is available.
+- Download the original `.blend` project.
+- Submit a `.blend` file and optional `.glb` preview through the website.
+- Store submissions in Google Drive, organized into a folder for each model.
 
-```bash
-npm run dev
-```
+Submissions are published automatically. The owner’s Google Drive connection is used for storage; submitters do not need to connect their own Drive accounts.
 
-Open [http://localhost:3000](http://localhost:3000).
+## Built with
+
+- Next.js and React
+- TypeScript
+- Google Drive API for model files and metadata
+- Vercel for hosting
+- `<model-viewer>` for interactive GLB previews
+
+## Run locally
+
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local` and add the required server-side values.
+3. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000).
+
+To connect Google Drive locally, configure `http://localhost:3000/api/google-drive/callback` as an authorized redirect URI for the Google OAuth web client, start the development server, and visit [http://localhost:3000/api/google-drive/connect](http://localhost:3000/api/google-drive/connect). The callback page returns a refresh token for the server environment. Keep `.env.local` and all tokens private.
+
+## Environment variables
+
+Set these as server-side environment variables in Vercel. Do not prefix them with `NEXT_PUBLIC_` or commit their values.
+
+| Variable | Purpose |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | Google OAuth web client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth web client secret |
+| `GOOGLE_REFRESH_TOKEN` | Refresh token for the owner’s Drive connection |
+| `POLY_NOOK_SUBMISSION_CODE` | Private code required to submit a model |
+| `GOOGLE_OAUTH_REDIRECT_URI` | OAuth callback URL; local development defaults to `http://localhost:3000/api/google-drive/callback` |
+| `GOOGLE_DRIVE_FOLDER_ID` | Optional ID of a Drive folder accessible to the app; leave unset to let Poly Nook create its model folders |
+
+After changing Vercel environment variables, redeploy the project. Google OAuth apps in External Testing issue refresh tokens that expire after seven days; move the consent screen to Production for ongoing use.
+
+## Project structure
+
+- `src/app/page.tsx` — public gallery and model details panel
+- `src/app/submit/page.tsx` — model submission form
+- `src/app/api/google-drive/` — Drive connection, uploads, gallery listing, and file delivery
+- `src/app/privacy/page.tsx` — privacy policy

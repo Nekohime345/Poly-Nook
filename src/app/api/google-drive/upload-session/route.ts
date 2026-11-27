@@ -41,6 +41,39 @@ async function getModelsFolderId(accessToken: string) {
   return createPayload.id as string;
 }
 
+async function getSubmissionFolderId(accessToken: string, modelsFolderId: string, submissionId: string, title: string) {
+  const query = `'${modelsFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and appProperties has { key='polyNookSubmission' and value='${submissionId}' } and trashed=false`;
+  const listParams = new URLSearchParams({ q: query, pageSize: "1", fields: "files(id)" });
+  const listResponse = await fetch(`https://www.googleapis.com/drive/v3/files?${listParams}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  const listPayload = await listResponse.json();
+  if (!listResponse.ok) throw new Error(listPayload.error?.message ?? "Could not find the model's Drive folder.");
+  if (typeof listPayload.files?.[0]?.id === "string") return listPayload.files[0].id as string;
+
+  const folderName = title.replace(/[\\/:*?"<>|]/g, "-").trim().slice(0, 100) || "Untitled model";
+  const createResponse = await fetch("https://www.googleapis.com/drive/v3/files?fields=id", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: folderName,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [modelsFolderId],
+      appProperties: { polyNookSubmission: submissionId },
+    }),
+    cache: "no-store",
+  });
+  const createPayload = await createResponse.json();
+  if (!createResponse.ok || typeof createPayload.id !== "string") {
+    throw new Error(createPayload.error?.message ?? "Could not create the model's Drive folder.");
+  }
+  return createPayload.id as string;
+}
+
 export async function POST(request: Request) {
   let input: Record<string, unknown>;
   try {
@@ -68,7 +101,8 @@ export async function POST(request: Request) {
 
   try {
     const accessToken = await getGoogleDriveAccessToken();
-    const folderId = await getModelsFolderId(accessToken);
+    const modelsFolderId = await getModelsFolderId(accessToken);
+    const folderId = await getSubmissionFolderId(accessToken, modelsFolderId, submissionId, title);
     const metadata = {
       name: filename.replace(/[\\/]/g, "_"),
       mimeType,

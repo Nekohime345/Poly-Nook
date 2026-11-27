@@ -27,16 +27,25 @@ export default function SubmitPage() {
     const session = await sessionResponse.json();
     if (!sessionResponse.ok) throw new Error(session.error ?? "Could not start the upload.");
 
-    const uploadResponse = await fetch(session.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.name.toLowerCase().endsWith(".glb") ? "model/gltf-binary" : "application/octet-stream" },
-      body: file,
-    });
-    const uploaded: UploadResult | { error?: { message?: string } } = await uploadResponse.json().catch(() => ({}));
-    if (!uploadResponse.ok || !("id" in uploaded) || !uploaded.id) {
-      const error = "error" in uploaded ? uploaded.error?.message : undefined;
-      throw new Error(error ?? "Drive could not finish this file upload. Try again.");
+    const chunkSize = 4 * 1024 * 1024;
+    let uploaded: UploadResult | undefined;
+    for (let start = 0; start < file.size; start += chunkSize) {
+      const end = Math.min(start + chunkSize, file.size);
+      const chunkResponse = await fetch("/api/google-drive/upload-chunk", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
+          "X-Poly-Nook-Upload-Url": session.uploadUrl,
+          "X-Poly-Nook-Submission-Code": String(form.get("submissionCode") ?? ""),
+        },
+        body: file.slice(start, end),
+      });
+      const chunkResult: { complete?: boolean; id?: string; error?: string } = await chunkResponse.json().catch(() => ({}));
+      if (!chunkResponse.ok) throw new Error(chunkResult.error ?? "Drive could not finish this file upload. Try again.");
+      if (chunkResult.complete && chunkResult.id) uploaded = { id: chunkResult.id };
     }
+    if (!uploaded) throw new Error("Drive did not confirm that the file finished uploading. Please try again.");
 
     const publishResponse = await fetch("/api/google-drive/publish-file", {
       method: "POST",

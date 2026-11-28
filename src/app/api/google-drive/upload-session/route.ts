@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getGoogleDriveAccessToken, hasValidSubmissionCode } from "@/lib/google-drive";
+import { getFirestoreDatabase, getManilaDateKey, hasFirebaseAdminConfig, isDateKey } from "@/lib/firebase-admin";
 
 const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = new Set([".blend", ".glb"]);
@@ -91,11 +92,27 @@ export async function POST(request: Request) {
   const creator = typeof input.creator === "string" ? input.creator.trim().slice(0, 80) : "";
   const category = typeof input.category === "string" ? input.category.trim().slice(0, 40) : "Other";
   const description = typeof input.description === "string" ? input.description.trim().slice(0, 500) : "";
+  const challengeDate = typeof input.challengeDate === "string" ? input.challengeDate : "";
   const submissionId = typeof input.submissionId === "string" && /^[a-zA-Z0-9-]{8,64}$/.test(input.submissionId) ? input.submissionId : randomUUID();
 
   if (!filename || !ALLOWED_EXTENSIONS.has(extension)) return jsonError("Only .blend and .glb files are accepted.", 400);
   if (!size || size > MAX_UPLOAD_BYTES) return jsonError("Each file must be smaller than 1 GB.", 400);
   if (!title || !creator) return jsonError("Add a model title and creator name.", 400);
+  if (input.challengeDate !== undefined && input.challengeDate !== null && input.challengeDate !== "" && !isDateKey(challengeDate)) {
+    return jsonError("The challenge date is invalid.", 400);
+  }
+
+  if (challengeDate) {
+    if (challengeDate !== getManilaDateKey()) return jsonError("This challenge is no longer accepting submissions.", 409);
+    if (!hasFirebaseAdminConfig()) return jsonError("Challenge submissions are not connected yet.", 503);
+    try {
+      const challenge = await getFirestoreDatabase().collection("challenges").doc(challengeDate).get();
+      if (!challenge.exists || challenge.data()?.status !== "open") return jsonError("This challenge is not accepting submissions.", 409);
+    } catch (error) {
+      console.error("Checking challenge status failed", error instanceof Error ? error.message : "unknown error");
+      return jsonError("Challenge submissions are not connected yet.", 503);
+    }
+  }
 
   const mimeType = extension === ".glb" ? "model/gltf-binary" : "application/octet-stream";
 
@@ -117,6 +134,7 @@ export async function POST(request: Request) {
         category,
         description: description.slice(0, 120),
         status: "uploading",
+        ...(challengeDate ? { challengeDate } : {}),
       },
     };
 

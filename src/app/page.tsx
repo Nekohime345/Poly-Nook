@@ -68,7 +68,7 @@ export default function Home() {
     <main>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="Poly Nook home"><span className="brand-mark">p</span>poly nook<span className="brand-period">.</span></a>
-        <nav className="top-links" aria-label="Main navigation"><a href="#gallery">Explore</a><a href="#about">About</a></nav>
+        <nav className="top-links" aria-label="Main navigation"><a href="#gallery">Explore</a><a href="/challenge">Daily challenge</a><a href="#about">About</a></nav>
         <a className="submit-button" href="/submit">Share a model <span aria-hidden="true">↗</span></a>
       </header>
 

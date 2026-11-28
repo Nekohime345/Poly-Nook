@@ -8,7 +8,7 @@ export default function SubmitPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function uploadFile(file: File, form: FormData, submissionId: string, role: "source" | "preview") {
+  async function uploadFile(file: File, form: FormData, submissionId: string, role: "source" | "preview", challengeDate: string | null): Promise<UploadResult> {
     const sessionResponse = await fetch("/api/google-drive/upload-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -22,6 +22,7 @@ export default function SubmitPage() {
         description: form.get("description"),
         submissionId,
         role,
+        ...(challengeDate ? { challengeDate } : {}),
       }),
     });
     const session = await sessionResponse.json();
@@ -54,6 +55,7 @@ export default function SubmitPage() {
     });
     const published = await publishResponse.json();
     if (!publishResponse.ok) throw new Error(published.error ?? "The file uploaded, but could not be published.");
+    return uploaded;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -72,13 +74,36 @@ export default function SubmitPage() {
     setBusy(true);
     setMessage("Uploading your Blender file to Poly Nook Drive… keep this page open.");
     const submissionId = crypto.randomUUID();
+    const challengeDate = new URLSearchParams(window.location.search).get("challengeDate");
     try {
-      await uploadFile(source, form, submissionId, "source");
+      const sourceUpload = await uploadFile(source, form, submissionId, "source", challengeDate);
+      let previewFileId = "";
       if (preview instanceof File && preview.size > 0) {
         setMessage("Blender file uploaded. Uploading the GLB preview…");
-        await uploadFile(preview, form, submissionId, "preview");
+        const previewUpload = await uploadFile(preview, form, submissionId, "preview", challengeDate);
+        previewFileId = previewUpload.id;
       }
-      setMessage("Your model is uploaded and published in the gallery. Thank you for sharing!");
+      if (challengeDate) {
+        setMessage("Files uploaded. Adding your model to today’s challenge…");
+        const challengeResponse = await fetch(`/api/challenges/${encodeURIComponent(challengeDate)}/submissions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            challengeDate,
+            submissionCode: form.get("submissionCode"),
+            submissionId,
+            title: form.get("title"),
+            creator: form.get("creator"),
+            category: form.get("category"),
+            description: form.get("description"),
+            sourceFileId: sourceUpload.id,
+            previewFileId,
+          }),
+        });
+        const result = await challengeResponse.json();
+        if (!challengeResponse.ok) throw new Error(result.error ?? "The model uploaded, but could not be added to the challenge.");
+      }
+      setMessage(challengeDate ? "Your model is uploaded and entered in today’s challenge. Thank you for sharing!" : "Your model is uploaded and published in the gallery. Thank you for sharing!");
       formElement.reset();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The upload failed. Please try again.");
